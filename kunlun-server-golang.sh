@@ -205,8 +205,12 @@ get_user_input() {
         print_warn "Token 不能为空，请重新输入"
     done
     
+    read -p "监听地址 [默认: 0.0.0.0]: " service_host
+    KUNLUN_HOST=${service_host:-0.0.0.0}
+
     read -p "服务端口 [默认: 8008]: " service_port
-    SERVICE_PORT=${service_port:-8008}
+    KUNLUN_PORT=${service_port:-8008}
+    SERVICE_PORT=$KUNLUN_PORT
     
     local latest_version=$(get_latest_version)
     read -p "安装版本 [默认: $latest_version]: " install_version
@@ -216,7 +220,8 @@ get_user_input() {
     echo -e "${YELLOW}配置确认:${NC}"
     echo "  安装目录: $APP_DIR"
     echo "  管理员 Token: $admin_token"
-    echo "  服务端口: $SERVICE_PORT"
+    echo "  监听地址: $KUNLUN_HOST"
+    echo "  服务端口: $KUNLUN_PORT"
     echo "  安装版本: $INSTALL_VERSION"
     echo ""
     
@@ -273,7 +278,8 @@ create_env_file() {
     print_info "创建环境变量文件..."
     cat > "$APP_DIR/.env" << EOF
 ADMIN_TOKEN=$admin_token
-KUNLUN_PORT=$SERVICE_PORT
+KUNLUN_HOST=$KUNLUN_HOST
+KUNLUN_PORT=$KUNLUN_PORT
 EOF
     print_info ".env 文件创建成功"
 }
