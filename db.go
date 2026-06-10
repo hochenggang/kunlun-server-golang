@@ -180,16 +180,29 @@ func getOrCreateClient(machineID, hostname, clientIP string) (int, int, error) {
 }
 
 func getLastStatus(clientID int) (*KunlunReportLine, error) {
-	rows, err := db.Query("SELECT * FROM status_latest WHERE client_id = ? LIMIT 1", clientID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	if !rows.Next() {
+	k := &KunlunReportLine{}
+	err := db.QueryRow(`
+		SELECT client_id, timestamp, uptime_s, load_1min, load_5min, load_15min,
+		       running_tasks, total_tasks, cpu_user, cpu_system, cpu_nice, cpu_idle,
+		       cpu_iowait, cpu_irq, cpu_softirq, cpu_steal, mem_total_mib, mem_free_mib,
+		       mem_used_mib, mem_buff_cache_mib, tcp_connections, udp_connections,
+		       default_interface_net_rx_bytes, default_interface_net_tx_bytes, cpu_num_cores,
+		       root_disk_total_kb, root_disk_avail_kb, reads_completed, writes_completed,
+		       reading_ms, writing_ms, iotime_ms, ios_in_progress, weighted_io_time
+		FROM status_latest WHERE client_id = ?
+	`, clientID).Scan(
+		&k.ClientID, &k.Timestamp, &k.UptimeS, &k.Load1min, &k.Load5min, &k.Load15min,
+		&k.RunningTasks, &k.TotalTasks, &k.CPUUser, &k.CPUSystem, &k.CPUNice, &k.CPUIdle,
+		&k.CPUIOwait, &k.CPUIRQ, &k.CPUSoftirq, &k.CPUSteal, &k.MemTotalMiB, &k.MemFreeMiB,
+		&k.MemUsedMiB, &k.MemBuffCacheMiB, &k.TCPConnections, &k.UDPConnections,
+		&k.DefaultInterfaceNetRxBytes, &k.DefaultInterfaceNetTxBytes, &k.CPUNumCores,
+		&k.RootDiskTotalKB, &k.RootDiskAvailKB, &k.ReadsCompleted, &k.WritesCompleted,
+		&k.ReadingMs, &k.WritingMs, &k.IOTimeMs, &k.IOSInProgress, &k.WeightedIOTime,
+	)
+	if err == sql.ErrNoRows {
 		return nil, sql.ErrNoRows
 	}
-	k := &KunlunReportLine{}
-	if err := k.ScanRow(rows); err != nil {
+	if err != nil {
 		return nil, err
 	}
 	return k, nil
