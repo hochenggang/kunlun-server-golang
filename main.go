@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -14,8 +16,18 @@ func main() {
 	}
 	defer db.Close()
 
+	host := os.Getenv("KUNLUN_HOST")
+	if host == "" {
+		host = "0.0.0.0"
+	}
+	port := os.Getenv("KUNLUN_PORT")
+	if port == "" {
+		port = "8008"
+	}
+
 	r := setupRouter()
-	if err := r.Run("0.0.0.0:8008"); err != nil {
+	addr := fmt.Sprintf("%s:%s", host, port)
+	if err := r.Run(addr); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

@@ -102,6 +102,12 @@ get_admin_token() {
 
 get_service_port() {
     SERVICE_PORT=8008
+    if [[ -f "$ENV_FILE" ]]; then
+        local env_port=$(grep "^KUNLUN_PORT=" "$ENV_FILE" | cut -d'=' -f2)
+        if [[ -n "$env_port" ]]; then
+            SERVICE_PORT=$env_port
+        fi
+    fi
 }
 
 check_root() {
@@ -267,6 +273,7 @@ create_env_file() {
     print_info "创建环境变量文件..."
     cat > "$APP_DIR/.env" << EOF
 ADMIN_TOKEN=$admin_token
+KUNLUN_PORT=$SERVICE_PORT
 EOF
     print_info ".env 文件创建成功"
 }
